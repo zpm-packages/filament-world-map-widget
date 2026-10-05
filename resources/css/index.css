@@ -1,1 +1,104 @@
+@import "tailwindcss";
 @import '../../node_modules/jsvectormap/dist/jsvectormap.min.css';
+
+@source "../../src/**/*.php";
+@source "../../resources/views/**/*.blade.php";
+@source "../../vendor/filament/**/*.blade.php";
+
+/* Filament styled jsVectorMap Zoom Buttons */
+.jvm-container .jvm-zoom-btn,
+.jvm-zoom-btn {
+    position: absolute;
+    left: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    margin: 0;
+    border-radius: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1;
+    background-color: #ffffff;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    z-index: 10;
+}
+
+.jvm-container .jvm-zoom-btn:hover,
+.jvm-zoom-btn:hover {
+    background-color: #f9fafb;
+    color: #111827;
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.jvm-container .jvm-zoom-btn:active,
+.jvm-zoom-btn:active {
+    background-color: #f3f4f6;
+    transform: scale(0.95);
+}
+
+.jvm-container .jvm-zoom-btn.jvm-zoomin,
+.jvm-zoom-btn.jvm-zoomin {
+    top: 1rem;
+}
+
+.jvm-container .jvm-zoom-btn.jvm-zoomout,
+.jvm-zoom-btn.jvm-zoomout {
+    top: 3.5rem;
+}
+
+/* Dark mode for Zoom Buttons */
+:is(.dark) .jvm-container .jvm-zoom-btn,
+:is(.dark) .jvm-zoom-btn {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+:is(.dark) .jvm-container .jvm-zoom-btn:hover,
+:is(.dark) .jvm-zoom-btn:hover {
+    background-color: #374151;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+:is(.dark) .jvm-container .jvm-zoom-btn:active,
+:is(.dark) .jvm-zoom-btn:active {
+    background-color: #4b5563;
+}
+
+/* Filament styled Tooltip */
+.jvm-tooltip {
+    background-color: #111827 !important;
+    color: #ffffff !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    padding: 0.375rem 0.625rem !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+    pointer-events: none;
+    z-index: 50;
+    border: none !important;
+}
+
+.jvm-tooltip h5 {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+:is(.dark) .jvm-tooltip {
+    background-color: #1f2937 !important;
+    color: #f9fafb !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

@@ -2,6 +2,11 @@
 
 All notable changes to `filament-world-map-widget` will be documented in this file.
 
+## 2.0.0 - 2026-02-10
+
+- Support for Filament v5.
+- Require PHP 8.2+.
+
 ## v1.0.3 - 2025-01-18
 
 **Full Changelog**: https://github.com/InfinityXTech/filament-world-map-widget/compare/v1.0.2...v1.0.3

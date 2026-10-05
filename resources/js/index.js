@@ -17,6 +17,7 @@ export default function initWorldMapWidget({ stats, tooltipText, map, customMapU
     return {
         stats,
         mapInstance: null,
+        themeObserver: null,
 
         init() {
             const self = this;
@@ -27,46 +28,92 @@ export default function initWorldMapWidget({ stats, tooltipText, map, customMapU
 
             loadScript(scriptUrl, () => {
                 self.renderMap();
+
+                // Observar cambios de tema (modo claro / oscuro de Filament)
+                self.themeObserver = new MutationObserver(() => {
+                    self.renderMap();
+                });
+
+                self.themeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class'],
+                });
             });
         },
 
-        renderMap() {
-            const self = this;
-            const container = document.querySelector(selector);
-
-            if (!container) {
-                return;
+        destroy() {
+            if (this.themeObserver) {
+                this.themeObserver.disconnect();
+                this.themeObserver = null;
             }
 
-            if (self.mapInstance) {
-                self.mapInstance.destroy();
-                self.mapInstance = null;
+            if (this.mapInstance) {
+                try {
+                    this.mapInstance.destroy();
+                } catch (e) {}
+                this.mapInstance = null;
+            }
+        },
+
+        renderMap() {
+            const container = document.querySelector(selector);
+            if (!container) return;
+
+            if (this.mapInstance) {
+                try {
+                    this.mapInstance.destroy();
+                } catch (e) {}
+                this.mapInstance = null;
             }
 
             container.innerHTML = '';
 
-            const dataValues = self.stats;
-            const values = Object.values(dataValues);
-            const minValue = values.length ? Math.min(...values) : 0;
-            const maxValue = values.length ? Math.max(...values) : 0;
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const dataValues = this.stats || {};
 
-            const normalizeOpacity = (value, min, max) =>
-                min === max ? 1 : 0.3 + ((value - min) / (max - min)) * (1 - 0.3);
+            // Filtrar únicamente regiones con valores mayores a 0
+            const activeEntries = Object.entries(dataValues).filter(([_, val]) => Number(val) > 0);
+            const activeValues = activeEntries.map(([_, val]) => Number(val));
+            const minValue = activeValues.length > 0 ? Math.min(...activeValues) : 0;
+            const maxValue = activeValues.length > 0 ? Math.max(...activeValues) : 0;
+
+            // En modo oscuro usamos un rango de opacidad más luminoso para que no se apague contra el negro
+            const minOpacity = isDarkMode ? 0.55 : 0.35;
+            const maxOpacity = 1.0;
 
             const regionScales = Object.fromEntries(
-                Object.entries(dataValues).map(([code, value]) => {
-                    const opacity = normalizeOpacity(value, minValue, maxValue);
+                activeEntries.map(([code, value]) => {
+                    const numVal = Number(value);
+                    const t = maxValue === minValue ? 1 : (numVal - minValue) / (maxValue - minValue);
+                    const opacity = minOpacity + t * (maxOpacity - minOpacity);
                     return [code, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity.toFixed(2)})`];
                 })
             );
 
             const regionValues = Object.fromEntries(
-                Object.entries(dataValues).map(([code]) => [code, code])
+                activeEntries.map(([code]) => [code, code])
             );
 
-            const options = {
+            // Base neutra: visible y estructurada en ambos modos
+            const baseRegionFill = isDarkMode ? '#27272a' : '#f1f5f9';
+            const baseRegionStroke = isDarkMode ? '#3f3f46' : '#cbd5e1';
+
+            const defaultOptions = {
                 selector: selector,
                 map: map,
+                regionStyle: {
+                    initial: {
+                        fill: baseRegionFill,
+                        fillOpacity: 1,
+                        stroke: baseRegionStroke,
+                        strokeWidth: 0.75,
+                        strokeOpacity: 1,
+                    },
+                    hover: {
+                        fillOpacity: 0.85,
+                        cursor: 'pointer',
+                    },
+                },
                 series: {
                     regions: [{
                         attribute: 'fill',
@@ -76,7 +123,10 @@ export default function initWorldMapWidget({ stats, tooltipText, map, customMapU
                 },
                 showTooltip: true,
                 onRegionTooltipShow(event, tooltip, code) {
-                    const stats = self.stats[code.toUpperCase()] || 0;
+                    const uppercaseCode = code ? code.toUpperCase() : '';
+                    const lowercaseCode = code ? code.toLowerCase() : '';
+                    const stats = dataValues[uppercaseCode] ?? dataValues[lowercaseCode] ?? dataValues[code] ?? 0;
+
                     tooltip.text(
                         `<h5>${tooltip.text()}: ${stats} ${tooltipText}</h5>`,
                         true // Enable HTML in the tooltip
@@ -85,20 +135,33 @@ export default function initWorldMapWidget({ stats, tooltipText, map, customMapU
             };
 
             const mergedOptions = {
-                ...options,
+                ...defaultOptions,
                 ...additionalOptions,
+                regionStyle: {
+                    ...defaultOptions.regionStyle,
+                    ...additionalOptions.regionStyle,
+                    initial: {
+                        ...defaultOptions.regionStyle?.initial,
+                        ...additionalOptions.regionStyle?.initial,
+                    },
+                    hover: {
+                        ...defaultOptions.regionStyle?.hover,
+                        ...additionalOptions.regionStyle?.hover,
+                    },
+                },
                 series: {
                     regions: [
                         {
-                            ...options.series.regions[0],
+                            ...defaultOptions.series.regions[0],
                             ...additionalOptions.series?.regions?.[0],
                         }
                     ],
                 },
             };
 
-            self.mapInstance = new jsVectorMap(mergedOptions);
-        },
+            // Inicializar el mapa
+            this.mapInstance = new jsVectorMap(mergedOptions);
+        }
     };
 }
 

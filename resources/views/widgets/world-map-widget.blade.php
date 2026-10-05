@@ -14,7 +14,7 @@
             additionalOptions: @js($this->additionalOptions()),
             customMapUrl: @js($this->customMapUrl())
         })"
-        x-init="init()">
+    >
         <x-filament::section>
             @if(!empty($this->heading()))
                 <x-filament::section.heading>
