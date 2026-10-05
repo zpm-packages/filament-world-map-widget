@@ -2,6 +2,10 @@
 
 All notable changes to `filament-world-map-widget` will be documented in this file.
 
+## v5.0.0 - 2026-10-05
+
+**Full Changelog**: https://github.com/zpm-packages/filament-world-map-widget/compare/v2.0.1...v5.0.0
+
 ## 2.0.0 - 2026-02-10
 
 - Support for Filament v5.
